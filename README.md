@@ -1,15 +1,16 @@
 # Video Location Tracker - Android App
 
-An Android application built with Kotlin that records video while simultaneously tracking GPS location data and saving it to JSON format. This app is perfect for applications requiring synchronized video and location data, such as field work documentation, travel vlogs, or security applications.
+An Android application built with Kotlin and **Jetpack Compose** that records video while simultaneously tracking GPS location data and saving it to JSON format. This app is perfect for applications requiring synchronized video and location data, such as field work documentation, travel vlogs, or security applications.
 
 ## Features
 
+- **Modern UI with Jetpack Compose**: Built entirely with declarative UI using Jetpack Compose
 - **Video Recording**: High-quality video recording using Android's CameraX API
 - **Real-time Location Tracking**: GPS location tracking during video recording
 - **Configurable Location Update Intervals**: Choose from multiple refresh rates (0.5s to 5s)
 - **JSON Data Export**: Location data saved in structured JSON format
 - **Real-time UI Updates**: Live display of location accuracy, recording time, and frame count
-- **Permission Management**: Automatic handling of camera and location permissions
+- **Permission Management**: Elegant permission handling with Accompanist library
 
 ## Technical Specifications
 
@@ -35,29 +36,39 @@ The app offers several location update intervals to balance accuracy with batter
 app/
 ├── src/main/
 │   ├── java/com/example/videolocationtracker/
-│   │   ├── MainActivity.kt              # Main activity with video recording logic
-│   │   └── LocationFrame.kt             # Data classes for location data
+│   │   ├── MainActivity.kt              # Main activity with Compose setup
+│   │   ├── VideoLocationViewModel.kt    # ViewModel for state management
+│   │   ├── VideoRecordingScreen.kt      # Main recording screen (Compose)
+│   │   ├── PermissionScreens.kt         # Permission handling screens (Compose)
+│   │   ├── LocationFrame.kt             # Data classes for location data
+│   │   └── ui/theme/                    # Jetpack Compose theme files
+│   │       ├── Color.kt                 # Color definitions
+│   │       ├── Theme.kt                 # Material 3 theme
+│   │       └── Type.kt                  # Typography definitions
 │   ├── res/
-│   │   ├── layout/
-│   │   │   └── activity_main.xml        # Main UI layout
 │   │   ├── values/
-│   │   │   ├── colors.xml               # App colors
+│   │   │   ├── colors.xml               # Fallback colors
 │   │   │   ├── strings.xml              # String resources
-│   │   │   └── themes.xml               # App themes
-│   │   ├── drawable/
-│   │   │   └── ic_videocam.xml          # Video camera icon
+│   │   │   └── themes.xml               # Legacy theme support
 │   │   └── xml/
 │   │       ├── file_paths.xml           # File provider paths
 │   │       ├── backup_rules.xml         # Backup configuration
 │   │       └── data_extraction_rules.xml # Data extraction rules
 │   └── AndroidManifest.xml              # App permissions and configuration
-├── build.gradle.kts                     # App-level dependencies
+├── build.gradle.kts                     # App-level dependencies with Compose
 └── proguard-rules.pro                   # ProGuard configuration
 ```
 
 ## Key Dependencies
 
 ```kotlin
+// Jetpack Compose
+implementation(platform("androidx.compose:compose-bom:2023.10.01"))
+implementation("androidx.compose.ui:ui")
+implementation("androidx.compose.material3:material3")
+implementation("androidx.activity:activity-compose:1.8.2")
+implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
 // Camera and Video
 implementation("androidx.camera:camera-core:1.3.1")
 implementation("androidx.camera:camera-camera2:1.3.1")
@@ -67,6 +78,9 @@ implementation("androidx.camera:camera-view:1.3.1")
 
 // Location Services
 implementation("com.google.android.gms:play-services-location:21.0.1")
+
+// Permissions (Accompanist)
+implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
 // JSON handling
 implementation("com.google.code.gson:gson:2.10.1")

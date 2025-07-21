@@ -114,4 +114,8 @@ class VideoLocationViewModel : ViewModel() {
             "Location: ${String.format("%.6f", location.latitude)}, ${String.format("%.6f", location.longitude)} (±${location.accuracy.toInt()}m)"
         } ?: "Location: Not Available"
     }
+    
+    fun getLocationDataSafely(): List<LocationFrame> {
+        return _locationData.value ?: emptyList()
+    }
 }

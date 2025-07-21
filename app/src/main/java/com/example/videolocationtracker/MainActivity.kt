@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
                     is VideoRecordEvent.Finalize -> {
                         if (!recordEvent.hasError()) {
                             saveLocationDataToFile(viewModel, name)
-                            val locationCount = viewModel.locationData.value?.size ?: 0
+                            val locationCount = viewModel.getLocationDataSafely().size
                             val msg = "Video saved successfully with $locationCount location points"
                             Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                             Log.d(TAG, msg)
@@ -226,7 +226,7 @@ class MainActivity : ComponentActivity() {
         try {
             val gson = GsonBuilder().setPrettyPrinting().create()
             
-            val locationDataList = viewModel.locationData.value ?: emptyList()
+            val locationDataList = viewModel.getLocationDataSafely()
             val videoMetadata = VideoMetadata(
                 videoName = videoName,
                 recordingStartTime = viewModel.recordingStartTime.value ?: 0L,

@@ -37,6 +37,9 @@ fun VideoRecordingScreen(
     val locationData by viewModel.locationData.observeAsState(emptyList())
     val selectedInterval by viewModel.selectedLocationInterval.observeAsState(1000L)
     
+    // Get safe location data count
+    val locationPointsCount = locationData.size
+    
     // Dropdown state
     var expanded by remember { mutableStateOf(false) }
     val intervalOptions = viewModel.locationIntervals.keys.toList()
@@ -56,15 +59,15 @@ fun VideoRecordingScreen(
         )
         
         // Status Overlay (Top)
-        StatusOverlay(
-            viewModel = viewModel,
-            isRecording = isRecording,
-            recordingTime = viewModel.getFormattedRecordingTime(),
-            locationPointsCount = locationData.size,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-        )
+                 StatusOverlay(
+             viewModel = viewModel,
+             isRecording = isRecording,
+             recordingTime = viewModel.getFormattedRecordingTime(),
+             locationPointsCount = locationPointsCount,
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .align(Alignment.TopCenter)
+         )
         
         // Controls (Bottom)
         Column(

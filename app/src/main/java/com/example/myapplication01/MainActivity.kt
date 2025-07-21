@@ -1,4 +1,4 @@
-package com.example.videolocationtracker
+package com.example.myapplication01
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -38,7 +38,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.videolocationtracker.ui.theme.VideoLocationTrackerTheme
+import com.example.myapplication01.ui.theme.MyApplication01Theme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         
         setContent {
-            VideoLocationTrackerTheme {
+            MyApplication01Theme {
                 val viewModel: VideoLocationViewModel = viewModel()
                 val permissionsState = rememberMultiplePermissionsState(REQUIRED_PERMISSIONS.toList())
                 

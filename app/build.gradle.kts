@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.videolocationtracker"
+    namespace = "com.example.myapplication01"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.videolocationtracker"
+        applicationId = "com.example.myapplication01"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

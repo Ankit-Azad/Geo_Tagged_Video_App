@@ -29,7 +29,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.VideoLocationTracker"
+        android:theme="@style/Theme.MyApplication01"
         tools:targetApi="31">
         
         <activity

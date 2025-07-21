@@ -16,5 +16,5 @@
 -keep class * implements com.google.gson.JsonDeserializer
 
 # Keep data classes
--keep class com.example.videolocationtracker.LocationFrame { *; }
--keep class com.example.videolocationtracker.VideoMetadata { *; }
+-keep class com.example.myapplication01.LocationFrame { *; }
+-keep class com.example.myapplication01.VideoMetadata { *; }

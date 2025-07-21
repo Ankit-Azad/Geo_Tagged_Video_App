@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Video Location Tracker</string>
+    <string name="app_name">MyApplication01</string>
     <string name="start_recording">START</string>
     <string name="stop_recording">STOP</string>
     <string name="recording_status_ready">Ready to Record</string>

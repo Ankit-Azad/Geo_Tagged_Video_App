@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Video Location Tracker"
+rootProject.name = "MyApplication01"
 include(":app")

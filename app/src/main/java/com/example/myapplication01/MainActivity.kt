@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -239,17 +240,60 @@ class MainActivity : ComponentActivity() {
             val jsonString = gson.toJson(videoMetadata)
             
             val fileName = "${videoName}_location_data.json"
-            val file = File(getExternalFilesDir(null), fileName)
             
-            FileWriter(file).use { writer ->
+            // Save to the same location as videos: Movies/VideoLocationTracker/
+            val moviesDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // For Android 10+ (API 29+), use MediaStore
+                saveJsonToMediaStore(fileName, jsonString)
+                return
+            } else {
+                // For older versions, use direct file access
+                val moviesFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "VideoLocationTracker")
+                if (!moviesFolder.exists()) {
+                    moviesFolder.mkdirs()
+                }
+                File(moviesFolder, fileName)
+            }
+            
+            FileWriter(moviesDir).use { writer ->
                 writer.write(jsonString)
             }
             
-            Log.d(TAG, "Location data saved to: ${file.absolutePath}")
+            Log.d(TAG, "Location data saved to: ${moviesDir.absolutePath}")
+            Toast.makeText(this, "JSON saved to Movies/VideoLocationTracker/", Toast.LENGTH_SHORT).show()
             
         } catch (e: Exception) {
             Log.e(TAG, "Error saving location data", e)
             Toast.makeText(this, "Error saving location data: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    @SuppressLint("InlinedApi")
+    private fun saveJsonToMediaStore(fileName: String, jsonContent: String) {
+        try {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Movies/VideoLocationTracker/")
+            }
+            
+            val uri = contentResolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
+            uri?.let {
+                contentResolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(jsonContent.toByteArray())
+                }
+                Log.d(TAG, "JSON saved to MediaStore: Movies/VideoLocationTracker/$fileName")
+                Toast.makeText(this, "JSON saved to Movies/VideoLocationTracker/", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving JSON to MediaStore", e)
+            // Fallback to app's external files directory
+            val file = File(getExternalFilesDir(null), fileName)
+            FileWriter(file).use { writer ->
+                writer.write(jsonContent)
+            }
+            Log.d(TAG, "JSON saved to fallback location: ${file.absolutePath}")
+            Toast.makeText(this, "JSON saved to app files directory", Toast.LENGTH_SHORT).show()
         }
     }
 

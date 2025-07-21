@@ -114,4 +114,63 @@ class VideoLocationViewModel : ViewModel() {
             "Location: ${String.format("%.6f", location.latitude)}, ${String.format("%.6f", location.longitude)} (±${location.accuracy.toInt()}m)"
         } ?: "Location: Not Available"
     }
+    
+    // Upload/Decline state
+    private val _showUploadScreen = MutableLiveData(false)
+    val showUploadScreen: LiveData<Boolean> = _showUploadScreen
+    
+    private val _isUploading = MutableLiveData(false)
+    val isUploading: LiveData<Boolean> = _isUploading
+    
+    private val _uploadProgress = MutableLiveData(0f)
+    val uploadProgress: LiveData<Float> = _uploadProgress
+    
+    private val _lastRecordedVideoName = MutableLiveData<String>()
+    val lastRecordedVideoName: LiveData<String> = _lastRecordedVideoName
+    
+    private val _lastRecordedJsonName = MutableLiveData<String>()
+    val lastRecordedJsonName: LiveData<String> = _lastRecordedJsonName
+    
+    fun showUploadDeclineScreen(videoName: String, jsonName: String) {
+        _lastRecordedVideoName.value = videoName
+        _lastRecordedJsonName.value = jsonName
+        _showUploadScreen.value = true
+    }
+    
+    fun startUpload() {
+        _isUploading.value = true
+        _uploadProgress.value = 0f
+    }
+    
+    fun updateUploadProgress(progress: Float) {
+        _uploadProgress.value = progress
+    }
+    
+    fun uploadCompleted() {
+        _isUploading.value = false
+        _uploadProgress.value = 1f
+        resetForNewRecording()
+    }
+    
+    fun uploadFailed() {
+        _isUploading.value = false
+        _uploadProgress.value = 0f
+    }
+    
+    fun declineUpload() {
+        resetForNewRecording()
+    }
+    
+    private fun resetForNewRecording() {
+        _showUploadScreen.value = false
+        _isRecording.value = false
+        _recordingStartTime.value = null
+        _recordingDuration.value = 0L
+        _videoName.value = null
+        _locationData.value = emptyList()
+        _frameCount.value = 0L
+        _lastRecordedVideoName.value = null
+        _lastRecordedJsonName.value = null
+        _uploadProgress.value = 0f
+    }
 }

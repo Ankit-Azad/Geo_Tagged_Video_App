@@ -46,6 +46,7 @@ import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.*
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileWriter
 import java.text.SimpleDateFormat
@@ -100,7 +101,9 @@ class MainActivity : ComponentActivity() {
                     permissionsState = permissionsState,
                     onStartRecording = { interval -> startRecording(viewModel, interval) },
                     onStopRecording = { stopRecording(viewModel) },
-                    onSetupCamera = { previewView -> setupCamera(previewView) }
+                    onSetupCamera = { previewView -> setupCamera(previewView) },
+                    onUpload = { uploadFiles(viewModel) },
+                    onDecline = { viewModel.declineUpload() }
                 )
             }
         }
@@ -203,11 +206,16 @@ class MainActivity : ComponentActivity() {
                     }
                     is VideoRecordEvent.Finalize -> {
                         if (!recordEvent.hasError()) {
-                            saveLocationDataToFile(viewModel, name)
+                            val jsonFileName = saveLocationDataToFile(viewModel, name)
                             val locationCount = (viewModel.locationData.value ?: emptyList()).size
                             val msg = "Video saved successfully with $locationCount location points"
                             Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                             Log.d(TAG, msg)
+                            
+                            // Show upload/decline screen
+                            if (jsonFileName != null) {
+                                viewModel.showUploadDeclineScreen(name, jsonFileName)
+                            }
                         } else {
                             recording?.close()
                             recording = null
@@ -224,7 +232,7 @@ class MainActivity : ComponentActivity() {
         recording = null
     }
 
-    private fun saveLocationDataToFile(viewModel: VideoLocationViewModel, videoName: String) {
+    private fun saveLocationDataToFile(viewModel: VideoLocationViewModel, videoName: String): String? {
         try {
             val gson = GsonBuilder().setPrettyPrinting().create()
             
@@ -272,6 +280,7 @@ class MainActivity : ComponentActivity() {
                 
                 // Also log the file size to confirm it was written
                 Log.d(TAG, "File size: ${jsonFile.length()} bytes")
+                return fileName
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to save to Downloads folder", e)
@@ -283,11 +292,50 @@ class MainActivity : ComponentActivity() {
                 val message = "⚠️ JSON saved to hidden app folder. Check Android/data/com.example.myapplication01/files/ using a file manager like Files by Google"
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
                 Log.d(TAG, "JSON saved to fallback location: ${fallbackFile.absolutePath}")
+                return fileName
             }
             
         } catch (e: Exception) {
             Log.e(TAG, "Error saving location data", e)
             Toast.makeText(this, "❌ Error saving JSON: ${e.message}", Toast.LENGTH_LONG).show()
+            return null
+        }
+    }
+    
+    private fun uploadFiles(viewModel: VideoLocationViewModel) {
+        viewModel.startUpload()
+        
+        val videoName = viewModel.lastRecordedVideoName.value
+        val jsonName = viewModel.lastRecordedJsonName.value
+        
+        if (videoName != null && jsonName != null) {
+            lifecycleScope.launch {
+                val uploadService = UploadService(this@MainActivity)
+                
+                val result = uploadService.uploadVideoAndJson(
+                    videoFileName = videoName,
+                    jsonFileName = jsonName,
+                    onProgress = { progress ->
+                        viewModel.updateUploadProgress(progress)
+                    }
+                )
+                
+                when (result) {
+                    is UploadResult.Success -> {
+                        Toast.makeText(this@MainActivity, "✅ Upload successful!", Toast.LENGTH_LONG).show()
+                        Log.d(TAG, "Upload completed: ${result.message}")
+                        viewModel.uploadCompleted()
+                    }
+                    is UploadResult.Error -> {
+                        Toast.makeText(this@MainActivity, "❌ Upload failed: ${result.error}", Toast.LENGTH_LONG).show()
+                        Log.e(TAG, "Upload failed: ${result.error}")
+                        viewModel.uploadFailed()
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(this, "❌ No files to upload", Toast.LENGTH_SHORT).show()
+            viewModel.uploadFailed()
         }
     }
 
@@ -307,27 +355,45 @@ fun VideoLocationTrackerApp(
     permissionsState: MultiplePermissionsState,
     onStartRecording: (Long) -> Unit,
     onStopRecording: () -> Unit,
-    onSetupCamera: (androidx.camera.view.PreviewView) -> Unit
+    onSetupCamera: (androidx.camera.view.PreviewView) -> Unit,
+    onUpload: () -> Unit,
+    onDecline: () -> Unit
 ) {
     val context = LocalContext.current
+    val showUploadScreen by viewModel.showUploadScreen.observeAsState(false)
+    val isUploading by viewModel.isUploading.observeAsState(false)
+    val uploadProgress by viewModel.uploadProgress.observeAsState(0f)
     
     when {
-        permissionsState.allPermissionsGranted -> {
+        !permissionsState.allPermissionsGranted -> {
+            if (permissionsState.shouldShowRationale) {
+                PermissionRationaleScreen(
+                    onRequestPermissions = { permissionsState.launchMultiplePermissionRequest() }
+                )
+            } else {
+                PermissionRequestScreen(
+                    onRequestPermissions = { permissionsState.launchMultiplePermissionRequest() }
+                )
+            }
+        }
+        showUploadScreen -> {
+            UploadDeclineScreen(
+                videoFileName = viewModel.lastRecordedVideoName.value ?: "",
+                jsonFileName = viewModel.lastRecordedJsonName.value ?: "",
+                recordingDuration = viewModel.getFormattedRecordingTime(),
+                locationPointsCount = viewModel.locationData.value?.size ?: 0,
+                isUploading = isUploading,
+                uploadProgress = uploadProgress,
+                onUpload = onUpload,
+                onDecline = onDecline
+            )
+        }
+        else -> {
             VideoRecordingScreen(
                 viewModel = viewModel,
                 onStartRecording = onStartRecording,
                 onStopRecording = onStopRecording,
                 onSetupCamera = onSetupCamera
-            )
-        }
-        permissionsState.shouldShowRationale -> {
-            PermissionRationaleScreen(
-                onRequestPermissions = { permissionsState.launchMultiplePermissionRequest() }
-            )
-        }
-        else -> {
-            PermissionRequestScreen(
-                onRequestPermissions = { permissionsState.launchMultiplePermissionRequest() }
             )
         }
     }

@@ -291,7 +291,7 @@ class MainActivity : ComponentActivity() {
         val videoName = viewModel.lastRecordedVideoName.value
         val jsonName = viewModel.lastRecordedJsonName.value
         
-        if (videoName != null && jsonName != null) {
+        if (videoName.isNotEmpty() && jsonName.isNotEmpty()) {
             lifecycleScope.launch {
                 val uploadService = UploadService(this@MainActivity)
                 

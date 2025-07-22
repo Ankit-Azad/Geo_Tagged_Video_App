@@ -9,6 +9,9 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.BufferedSink
+import okio.Source
+import okio.Buffer
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -140,7 +143,7 @@ class ProgressRequestBody(
     
     override fun contentLength(): Long = requestBody.contentLength()
     
-    override fun writeTo(sink: okio.BufferedSink) {
+    override fun writeTo(sink: BufferedSink) {
         val bufferedSink = sink.buffer
         val source = requestBody.source()
         
@@ -161,8 +164,8 @@ class ProgressRequestBody(
         }
     }
     
-    private fun RequestBody.source(): okio.Source {
-        val buffer = okio.Buffer()
+    private fun RequestBody.source(): Source {
+        val buffer = Buffer()
         writeTo(buffer)
         return buffer
     }

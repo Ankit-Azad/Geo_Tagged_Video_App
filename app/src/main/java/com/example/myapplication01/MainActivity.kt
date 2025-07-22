@@ -344,9 +344,12 @@ fun VideoLocationTrackerApp(
     onDecline: () -> Unit
 ) {
     val context = LocalContext.current
+    val currentScreen by viewModel.currentScreen.observeAsState("welcome")
     val showUploadScreen by viewModel.showUploadScreen.observeAsState(false)
     val isUploading by viewModel.isUploading.observeAsState(false)
     val uploadProgress by viewModel.uploadProgress.observeAsState(0f)
+    val currentLocation by viewModel.currentLocation.observeAsState()
+    val selectedInterval by viewModel.selectedLocationInterval.observeAsState(1000L)
     
     when {
         !permissionsState.allPermissionsGranted -> {
@@ -372,7 +375,29 @@ fun VideoLocationTrackerApp(
                 onDecline = onDecline
             )
         }
-        else -> {
+        currentScreen == "welcome" -> {
+            WelcomeScreen(
+                onGetStarted = { 
+                    viewModel.navigateToRecordingStart()
+                }
+            )
+        }
+        currentScreen == "recording_start" -> {
+            RecordingStartScreen(
+                currentLocation = viewModel.getFormattedLocation(),
+                selectedInterval = selectedInterval,
+                onIntervalChange = { interval -> 
+                    viewModel.setLocationInterval(interval)
+                },
+                onStartRecording = {
+                    viewModel.navigateToRecording()
+                },
+                onBack = {
+                    viewModel.navigateToWelcome()
+                }
+            )
+        }
+        currentScreen == "recording" -> {
             VideoRecordingScreen(
                 viewModel = viewModel,
                 onStartRecording = onStartRecording,

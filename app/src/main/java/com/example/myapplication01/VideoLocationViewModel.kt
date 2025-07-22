@@ -115,7 +115,10 @@ class VideoLocationViewModel : ViewModel() {
         } ?: "Location: Not Available"
     }
     
-    // Upload/Decline state
+    // Screen Navigation state
+    private val _currentScreen = MutableLiveData("welcome") // welcome, recording_start, recording, upload
+    val currentScreen: LiveData<String> = _currentScreen
+    
     private val _showUploadScreen = MutableLiveData(false)
     val showUploadScreen: LiveData<Boolean> = _showUploadScreen
     
@@ -161,8 +164,22 @@ class VideoLocationViewModel : ViewModel() {
         resetForNewRecording()
     }
     
+    // Navigation functions
+    fun navigateToRecordingStart() {
+        _currentScreen.value = "recording_start"
+    }
+    
+    fun navigateToRecording() {
+        _currentScreen.value = "recording"
+    }
+    
+    fun navigateToWelcome() {
+        _currentScreen.value = "welcome"
+    }
+    
     private fun resetForNewRecording() {
         _showUploadScreen.value = false
+        _currentScreen.value = "recording_start"
         _isRecording.value = false
         _recordingStartTime.value = 0L
         _recordingDuration.value = 0L

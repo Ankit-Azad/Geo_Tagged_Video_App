@@ -11,7 +11,7 @@ urlpatterns = [
     path('dashboard/', include('apps.dashboard.urls')),
     path('detection/', include('apps.detection.urls')),
     path('maps/', include('apps.maps.urls')),
-    path('api/', include('apps.detection.api_urls')),
+    path('api/', include('apps.detection.urls')),  # API endpoints
 ]
 
 if settings.DEBUG:

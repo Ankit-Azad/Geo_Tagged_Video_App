@@ -1,19 +1,19 @@
+# Core Django
 Django>=4.2.0
-psycopg2-binary>=2.9.5
-Pillow>=9.0.0
-django-cors-headers>=4.0.0
 djangorestframework>=3.14.0
-celery>=5.3.0
-redis>=4.5.0
+django-cors-headers>=4.0.0
+Pillow>=9.0.0
+
+# AI/ML Libraries
 opencv-python>=4.8.0
 ultralytics>=8.0.0
 numpy>=1.24.0
 torch>=2.0.0
 torchvision>=0.15.0
-matplotlib>=3.7.0
-folium>=0.14.0
-django-leaflet>=0.29.0
-django-bootstrap5>=23.3
-whitenoise>=6.5.0
-gunicorn>=21.0.0
-python-decouple>=3.8
+
+# Optional: For PostgreSQL (uncomment if needed)
+# psycopg2-binary>=2.9.5
+
+# Optional: For background processing (uncomment if needed)
+# celery>=5.3.0
+# redis>=4.5.0

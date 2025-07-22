@@ -1,49 +1,40 @@
 import os
 from pathlib import Path
-from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here')
+SECRET_KEY = 'django-insecure-change-this-in-production-abc123xyz789'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '*']
 
 # Application definition
-DJANGO_APPS = [
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.gis',
-]
-
-THIRD_PARTY_APPS = [
+    
+    # Third party apps
     'rest_framework',
     'corsheaders',
-    'bootstrap5',
-    'leaflet',
-]
-
-LOCAL_APPS = [
+    
+    # Local apps
     'apps.accounts',
     'apps.dashboard', 
     'apps.detection',
     'apps.maps',
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -72,15 +63,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'garbage_detection.wsgi.application'
 
-# Database
+# Database - Simple SQLite for development
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': config('DB_NAME', default='garbage_detection'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='password'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -152,23 +139,6 @@ REST_FRAMEWORK = {
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024   # 100MB
 
-# Celery settings
-CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = config('REDIS_URL', default='redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-
 # YOLO Model settings
 YOLO_MODEL_PATH = BASE_DIR / 'models' / 'yolo_garbage_detection.pt'
 CONFIDENCE_THRESHOLD = 0.5
-
-# Leaflet settings
-LEAFLET_CONFIG = {
-    'DEFAULT_CENTER': (28.6139, 77.2090),  # Delhi coordinates
-    'DEFAULT_ZOOM': 10,
-    'MIN_ZOOM': 3,
-    'MAX_ZOOM': 18,
-    'ATTRIBUTION_PREFIX': 'Garbage Detection System',
-}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - Garbage Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">🌱 Garbage Detection System</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Welcome, {{ user.username }} ({{ user.get_user_type_display }})</span>
+                <a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>📊 Navigation</h5>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'dashboard:dashboard' %}" class="btn btn-primary">Dashboard</a>
+                            <a href="{% url 'detection:detection_list' %}" class="btn btn-outline-primary">Detections</a>
+                            <a href="{% url 'maps:map_view' %}" class="btn btn-outline-primary">Map View</a>
+                            {% if user.is_supervisor %}
+                                <a href="{% url 'detection:video_uploads' %}" class="btn btn-outline-primary">Video Uploads</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h1 class="text-primary">{{ total_detections }}</h1>
+                                <p>Total Detections</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h1 class="text-warning">{{ pending_count }}</h1>
+                                <p>Pending Cleanup</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h1 class="text-success">{{ cleaned_count }}</h1>
+                                <p>Cleaned</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5>🚀 System Status</h5>
+                        <p>Garbage Detection System is running successfully!</p>
+                        <p><strong>API Endpoint:</strong> <code>POST /api/upload-video/</code></p>
+                        <p><strong>Your Android app can now upload videos to this server.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -36,6 +36,15 @@ fun VideoRecordingScreen(
     val recordingDuration by viewModel.recordingDuration.observeAsState(0L)
     val locationData by viewModel.locationData.observeAsState(emptyList())
     val selectedInterval by viewModel.selectedLocationInterval.observeAsState(1000L)
+    val shouldAutoStart by viewModel.shouldAutoStartRecording.observeAsState(false)
+    
+    // Auto-start recording if requested from RecordingStartScreen
+    LaunchedEffect(shouldAutoStart) {
+        if (shouldAutoStart && !isRecording) {
+            onStartRecording(selectedInterval)
+            viewModel.recordingStarted()
+        }
+    }
     
     // Get safe location data count
     val locationPointsCount = locationData.size
@@ -137,50 +146,37 @@ fun VideoRecordingScreen(
                 }
             }
             
-            // Auto-start recording when screen loads
-            LaunchedEffect(Unit) {
-                if (!isRecording) {
-                    onStartRecording(selectedInterval)
-                }
+            // Record Button
+            FloatingActionButton(
+                onClick = {
+                    if (isRecording) {
+                        onStopRecording()
+                    } else {
+                        onStartRecording(selectedInterval)
+                    }
+                },
+                modifier = Modifier.size(80.dp),
+                containerColor = if (isRecording) Color.Red else Color.Green,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Videocam,
+                    contentDescription = if (isRecording) "Stop Recording" else "Start Recording",
+                    modifier = Modifier.size(32.dp),
+                    tint = Color.White
+                )
             }
             
-            // Record Button (only stop button when recording)
-            if (isRecording) {
-                FloatingActionButton(
-                    onClick = { onStopRecording() },
-                    modifier = Modifier.size(80.dp),
-                    containerColor = Color.Red,
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop Recording",
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
-                }
-                
-                // Info Text
-                Text(
-                    text = "Tap to stop recording",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            } else {
-                // Show loading state
-                CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
-                    color = Color.White
-                )
-                
-                Text(
-                    text = "Starting recording...",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
+            // Info Text
+            Text(
+                text = if (isRecording) 
+                    "Tap to stop recording" 
+                else 
+                    "Tap to start recording with location tracking",
+                color = Color.White,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 16.dp)
+            )
         }
     }
 }

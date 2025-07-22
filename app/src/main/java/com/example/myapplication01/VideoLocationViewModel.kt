@@ -119,6 +119,9 @@ class VideoLocationViewModel : ViewModel() {
     private val _currentScreen = MutableLiveData("welcome") // welcome, recording_start, recording, upload
     val currentScreen: LiveData<String> = _currentScreen
     
+    private val _shouldAutoStartRecording = MutableLiveData(false)
+    val shouldAutoStartRecording: LiveData<Boolean> = _shouldAutoStartRecording
+    
     private val _showUploadScreen = MutableLiveData(false)
     val showUploadScreen: LiveData<Boolean> = _showUploadScreen
     
@@ -171,6 +174,11 @@ class VideoLocationViewModel : ViewModel() {
     
     fun navigateToRecording() {
         _currentScreen.value = "recording"
+        _shouldAutoStartRecording.value = true
+    }
+    
+    fun recordingStarted() {
+        _shouldAutoStartRecording.value = false
     }
     
     fun navigateToWelcome() {
@@ -180,6 +188,7 @@ class VideoLocationViewModel : ViewModel() {
     private fun resetForNewRecording() {
         _showUploadScreen.value = false
         _currentScreen.value = "recording_start"
+        _shouldAutoStartRecording.value = false
         _isRecording.value = false
         _recordingStartTime.value = 0L
         _recordingDuration.value = 0L

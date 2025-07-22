@@ -21,6 +21,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication01.ui.theme.MyApplication01Theme
@@ -288,8 +289,8 @@ class MainActivity : ComponentActivity() {
     private fun uploadFiles(viewModel: VideoLocationViewModel) {
         viewModel.startUpload()
         
-        val videoName = viewModel.lastRecordedVideoName.value
-        val jsonName = viewModel.lastRecordedJsonName.value
+        val videoName = viewModel.lastRecordedVideoName.value ?: ""
+        val jsonName = viewModel.lastRecordedJsonName.value ?: ""
         
         if (videoName.isNotEmpty() && jsonName.isNotEmpty()) {
             lifecycleScope.launch {

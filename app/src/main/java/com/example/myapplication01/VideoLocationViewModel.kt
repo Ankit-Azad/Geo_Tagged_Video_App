@@ -14,13 +14,13 @@ class VideoLocationViewModel : ViewModel() {
     private val _isRecording = MutableLiveData(false)
     val isRecording: LiveData<Boolean> = _isRecording
     
-    private val _recordingStartTime = MutableLiveData<Long>(0L)
+    private val _recordingStartTime = MutableLiveData(0L)
     val recordingStartTime: LiveData<Long> = _recordingStartTime
     
-    private val _recordingDuration = MutableLiveData<Long>(0L)
+    private val _recordingDuration = MutableLiveData(0L)
     val recordingDuration: LiveData<Long> = _recordingDuration
     
-    private val _videoName = MutableLiveData<String>("")
+    private val _videoName = MutableLiveData("")
     val videoName: LiveData<String> = _videoName
     
     // Location state
@@ -125,10 +125,10 @@ class VideoLocationViewModel : ViewModel() {
     private val _uploadProgress = MutableLiveData(0f)
     val uploadProgress: LiveData<Float> = _uploadProgress
     
-    private val _lastRecordedVideoName = MutableLiveData<String>("")
+    private val _lastRecordedVideoName = MutableLiveData("")
     val lastRecordedVideoName: LiveData<String> = _lastRecordedVideoName
     
-    private val _lastRecordedJsonName = MutableLiveData<String>("")
+    private val _lastRecordedJsonName = MutableLiveData("")
     val lastRecordedJsonName: LiveData<String> = _lastRecordedJsonName
     
     fun showUploadDeclineScreen(videoName: String, jsonName: String) {

@@ -61,12 +61,77 @@
                     </div>
                 </div>
                 
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>📱 Recent Uploads</h5>
+                                {% if recent_uploads %}
+                                    <div class="list-group list-group-flush">
+                                        {% for upload in recent_uploads %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ upload.video_name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ upload.uploaded_at|date:"M d, H:i" }}</small>
+                                                </div>
+                                                <span class="badge bg-{{ upload.processing_status|yesno:'success,warning,danger' }}">
+                                                    {{ upload.processing_status|capfirst }}
+                                                </span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No uploads yet. Upload from your Android app!</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>🎯 Recent Detections</h5>
+                                {% if recent_detections %}
+                                    <div class="list-group list-group-flush">
+                                        {% for detection in recent_detections %}
+                                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>Frame #{{ detection.frame_number }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ detection.latitude|floatformat:4 }}, {{ detection.longitude|floatformat:4 }}</small>
+                                                </div>
+                                                <span class="badge bg-{{ detection.status|yesno:'success,warning' }}">
+                                                    {{ detection.status|capfirst }}
+                                                </span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No detections yet.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="card mt-4">
                     <div class="card-body">
                         <h5>🚀 System Status</h5>
-                        <p>Garbage Detection System is running successfully!</p>
-                        <p><strong>API Endpoint:</strong> <code>POST /api/upload-video/</code></p>
-                        <p><strong>Your Android app can now upload videos to this server.</strong></p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>API Endpoint:</strong> <code>POST /api/upload-video/</code></p>
+                                <p><strong>Total Videos Processed:</strong> {{ upload_count }}</p>
+                                <p><strong>System Status:</strong> <span class="badge bg-success">Online</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Your Android app can upload videos to:</strong></p>
+                                <code>http://YOUR_SERVER_IP:8000/api/upload-video/</code>
+                                <br><br>
+                                <a href="{% url 'detection:detection_list' %}" class="btn btn-primary btn-sm">View All Detections</a>
+                                <a href="{% url 'maps:map_view' %}" class="btn btn-success btn-sm">View Map</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

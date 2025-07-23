@@ -202,3 +202,113 @@ Once setup is complete, your Django server will:
 - ✅ Allow status management (pending/cleaned)
 
 **Your Android app can now upload videos to this server!** 🎯
+
+## 🔄 How the Integration Works
+
+### Android App → Django Backend Flow:
+
+1. **📱 Android Records Video**: Your app records MP4 video with GPS location data every 0.5-5 seconds
+2. **📄 JSON Metadata Created**: Location data saved as JSON file with frame mapping
+3. **⬆️ Upload to Django**: Both video and JSON uploaded to `/api/upload-video/`
+4. **🤖 YOLO Processing**: Django processes video frames for garbage detection
+5. **📍 Location Mapping**: Detected frames mapped to GPS coordinates from JSON
+6. **📊 Dashboard Update**: Real-time dashboard shows detections with locations
+7. **🗺️ Map Display**: Interactive map shows clustered garbage markers
+
+### Frame-to-Location Mapping:
+
+- **Video FPS**: 30 fps (30 frames per second)
+- **Location Interval**: 0.5s (location updated every 500ms)
+- **Mapping**: Frames 0-14 use location point 0, frames 15-29 use location point 1, etc.
+- **Smart Detection**: YOLO skips similar frames to avoid duplicates
+
+### User Roles:
+
+- **👷 Workers**: View dashboard and map (read-only)
+- **👨‍💼 Supervisors**: Can toggle detection status (pending ↔ cleaned)
+
+## 🔧 Advanced Setup (Optional)
+
+### Enable Background Processing with Celery:
+
+```cmd
+# Install Redis (for Windows)
+# Download from: https://github.com/microsoftarchive/redis/releases
+
+# Install Celery
+pip install celery redis
+
+# Start Redis server (in separate terminal)
+redis-server
+
+# Start Celery worker (in separate terminal)
+celery -A garbage_detection worker --loglevel=info
+```
+
+### Switch to PostgreSQL:
+
+```cmd
+# Install PostgreSQL
+pip install psycopg2-binary
+
+# Update settings.py
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'garbage_detection',
+        'USER': 'postgres',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+## 📱 Android App Configuration
+
+Update your `UploadService.kt`:
+
+```kotlin
+companion object {
+    private const val BASE_URL = "http://YOUR_COMPUTER_IP:8000"
+    private const val UPLOAD_ENDPOINT = "/api/upload-video/"
+}
+```
+
+Replace `YOUR_COMPUTER_IP` with your actual IP address from `ipconfig`.
+
+## 🎯 Testing the Integration
+
+1. **Start Django Server**: `python manage.py runserver 0.0.0.0:8000`
+2. **Record Video**: Use your Android app to record a video with location
+3. **Upload**: Tap the upload button in your app
+4. **Check Dashboard**: Visit `http://localhost:8000` to see processing status
+5. **View Results**: Check detections at `http://localhost:8000/detection/`
+6. **See Map**: View locations at `http://localhost:8000/maps/`
+
+## 🐛 Troubleshooting Integration
+
+### Android App Issues:
+- **Upload fails**: Check server IP and port
+- **No response**: Ensure Django server is running
+- **Permission denied**: Check file permissions
+
+### Django Issues:
+- **No detections**: Check YOLO model path in settings
+- **Processing stuck**: Check Celery worker status
+- **Location mapping wrong**: Verify JSON format
+
+### Common Solutions:
+```cmd
+# Check server logs
+python manage.py runserver --verbosity=2
+
+# Test API directly
+curl -X POST http://localhost:8000/api/upload-video/ -F "video=@test.mp4" -F "metadata=@test.json"
+
+# Reset database if needed
+python manage.py flush
+python manage.py migrate
+```
+
+**Your Android app is now fully integrated with the Django backend for automated garbage detection!** 🎉

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Garbage Detection Map - Real-time View</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        .map-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            z-index: 1000;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        .map-sidebar.show {
+            transform: translateX(0);
+        }
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .detection-marker {
+            background: #ff6b6b;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+        }
+        .detection-marker.cleaned {
+            background: #51cf66;
+        }
+        .cluster-marker {
+            background: rgba(255, 107, 107, 0.8);
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <!-- Sidebar Toggle Button -->
+    <div class="sidebar-toggle" onclick="toggleSidebar()">
+        <span id="toggleIcon">📊</span>
+    </div>
+    
+    <!-- Map Sidebar -->
+    <div class="map-sidebar" id="mapSidebar">
+        <div class="p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">🗺️ Detection Map</h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()">×</button>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6>📈 Statistics</h6>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-primary fw-bold">{{ total_detections }}</div>
+                            <small>Total</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-warning fw-bold">{{ pending_count }}</div>
+                            <small>Pending</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-success fw-bold">{{ cleaned_count }}</div>
+                            <small>Cleaned</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6>🧭 Navigation</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dashboard:dashboard' %}" class="btn btn-outline-primary btn-sm">Dashboard</a>
+                        <a href="{% url 'detection:detection_list' %}" class="btn btn-outline-primary btn-sm">All Detections</a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="centerMap()">Center Map</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="card">
+                <div class="card-body">
+                    <h6>🏷️ Legend</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="detection-marker me-2"></div>
+                        <small>Pending Cleanup</small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="detection-marker cleaned me-2"></div>
+                        <small>Cleaned</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="cluster-marker me-2" style="width: 20px; height: 20px; font-size: 10px;">5</div>
+                        <small>Clustered Detections</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([25.62, 85.1], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Store markers for easy access
+        const markers = {};
+        let defaultCenter = [25.62, 85.1];
+        
+        // Add individual detections
+        {% for detection in detections %}
+            const marker{{ detection.id }} = L.circleMarker([{{ detection.latitude }}, {{ detection.longitude }}], {
+                radius: 8,
+                fillColor: '{{ detection.status }}' === 'cleaned' ? '#51cf66' : '#ff6b6b',
+                color: 'white',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+            
+            marker{{ detection.id }}.bindPopup(`
+                <div class="p-2">
+                    <h6>Detection #{{ detection.id }}</h6>
+                    <p class="mb-1"><strong>Frame:</strong> #{{ detection.frame_number }}</p>
+                    <p class="mb-1"><strong>Status:</strong> 
+                        <span class="badge bg-{{ detection.status|yesno:'success,warning' }}">
+                            {{ detection.status|capfirst }}
+                        </span>
+                    </p>
+                    <p class="mb-1"><strong>Time:</strong> {{ detection.detected_at|date:"M d, H:i" }}</p>
+                    <p class="mb-1"><strong>Location:</strong> {{ detection.latitude|floatformat:4 }}, {{ detection.longitude|floatformat:4 }}</p>
+                    {% if detection.confidence_score %}
+                        <p class="mb-0"><strong>Confidence:</strong> {{ detection.confidence_score|floatformat:2 }}</p>
+                    {% endif %}
+                </div>
+            `);
+            
+            markers[{{ detection.id }}] = marker{{ detection.id }};
+            
+            // Update map center to first detection
+            {% if forloop.first %}
+                defaultCenter = [{{ detection.latitude }}, {{ detection.longitude }}];
+            {% endif %}
+        {% endfor %}
+        
+        // Add clusters if available
+        {% for cluster in clusters %}
+            const clusterMarker{{ cluster.id }} = L.circleMarker([{{ cluster.center_latitude }}, {{ cluster.center_longitude }}], {
+                radius: Math.max(15, Math.min(30, {{ cluster.detection_count }} * 3)),
+                fillColor: {{ cluster.pending_count }} > 0 ? '#ff6b6b' : '#51cf66',
+                color: 'white',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.6
+            }).addTo(map);
+            
+            clusterMarker{{ cluster.id }}.bindPopup(`
+                <div class="p-2">
+                    <h6>Cluster Area</h6>
+                    <p class="mb-1"><strong>Total Detections:</strong> {{ cluster.detection_count }}</p>
+                    <p class="mb-1"><strong>Pending:</strong> {{ cluster.pending_count }}</p>
+                    <p class="mb-1"><strong>Cleaned:</strong> {{ cluster.cleaned_count }}</p>
+                    <p class="mb-0"><strong>Center:</strong> {{ cluster.center_latitude|floatformat:4 }}, {{ cluster.center_longitude|floatformat:4 }}</p>
+                </div>
+            `);
+        {% endfor %}
+        
+        // Center map on detections if available
+        if (defaultCenter[0] !== 25.62 || defaultCenter[1] !== 85.1) {
+            map.setView(defaultCenter, 15);
+        }
+        
+        // Sidebar functionality
+        let sidebarOpen = false;
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mapSidebar');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            sidebarOpen = !sidebarOpen;
+            
+            if (sidebarOpen) {
+                sidebar.classList.add('show');
+                toggleIcon.textContent = '×';
+            } else {
+                sidebar.classList.remove('show');
+                toggleIcon.textContent = '📊';
+            }
+        }
+        
+        function centerMap() {
+            if (defaultCenter[0] !== 25.62 || defaultCenter[1] !== 85.1) {
+                map.setView(defaultCenter, 15);
+            } else {
+                map.setView([25.62, 85.1], 13);
+            }
+        }
+        
+        // Remove marker function (for status updates)
+        window.removeMarker = function(id) {
+            if (markers[id]) {
+                map.removeLayer(markers[id]);
+                delete markers[id];
+            }
+        }
+        
+        // Auto-refresh every 30 seconds to get new detections
+        setInterval(() => {
+            // You can implement real-time updates here
+            console.log('Map refresh - checking for new detections...');
+        }, 30000);
+        
+        {% if not detections and not clusters %}
+            // Show message if no data
+            L.popup()
+                .setLatLng([25.62, 85.1])
+                .setContent(`
+                    <div class="text-center p-3">
+                        <h5>📱 No Detections Yet</h5>
+                        <p>Upload videos from your Android app to see garbage detections on this map.</p>
+                        <small><strong>API:</strong> POST /api/upload-video/</small>
+                    </div>
+                `)
+                .openOn(map);
+        {% endif %}
+    </script>
+</body>
+</html>
